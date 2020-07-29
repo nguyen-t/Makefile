@@ -1,5 +1,5 @@
 # Edit to fit needs
-CC = gcc
+CC = clang
 LIBS =
 DEFINES =
 SANS = undefined,address,leak
