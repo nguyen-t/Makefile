@@ -7,7 +7,7 @@ SANS     = undefined,address,leak
 WARNS    = all pedantic extra
 OPTIMIZE = -O3
 OUTPUT   =
-EXEC     = exec
+ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
 ARGS     =
 
 # Shouldn't really be touched
@@ -52,7 +52,7 @@ build: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR) $(OUTPUT)
 
 # Run executable with args
 run: $(OUTPUT)
-	$(EXEC) ./$(OUTPUT) $(ARGS)
+	$(ENV) ./$(OUTPUT) $(ARGS)
 
 # Clean up generated executable and object files
 clean:
