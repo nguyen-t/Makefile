@@ -6,7 +6,7 @@ DEFINES  =
 SANS     = undefined,address,leak
 WARNS    = all pedantic extra
 OPTIMIZE = -O3
-OUTPUT   = 
+OUTPUT   =
 ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
 ARGS     =
 
@@ -25,6 +25,7 @@ SOURCES = $(addprefix $(SRCDIR)/, $(addsuffix $(SRCEXT), $(INPUTS)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix $(OBJEXT), $(INPUTS)))
 CFLAGS  = $(addprefix -D, $(DEFINES)) -I$(HDRDIR) -c -o
 LDFLAGS = -o
+SHARED  = $(addsuffix .so, $(OUTPUT))
 
 # Calling run without building will build
 # without optimizations and debug flags
@@ -39,24 +40,25 @@ LDFLAGS = -o
 debug: DEFINES := DEBUG $(DEFINES)
 debug: CFLAGS  := $(addprefix -W, $(WARNS)) $(CFLAGS)
 debug: LDFLAGS := -fsanitize=$(SANS) $(LDFLAGS)
-debug: build
+debug: initialize
+debug: $(OUTPUT)
 
 # Build with optimizers and NDEBUG flags
 release: DEFINES := NDEBUG $(DEFINES)
 release: CFLAGS  := $(OPTIMIZE) $(CFLAGS)
 release: LDFLAGS := $(LDFLAGS)
-release: build
+release: initialize
+release: $(OUTPUT)
 
 # Build release but for use as a shared library
 library: DEFINES := NDEBUG $(DEFINES)
 library: CFLAGS  := -fPIC $(OPTIMIZE) $(CFLAGS)
 library: LDFLAGS := -shared $(LDFLAGS)
-library: $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OUTPUT).so $(OBJECTS) $(addprefix -l, $(LIB_C))
+library: initialize
+library: $(SHARED)
 
-# Actually build the executable
-# Should not be manually called
-build: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR) $(OUTPUT)
+# Sets up project structure
+initialize: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR)
 
 # Run executable with args
 run: $(OUTPUT)
@@ -64,7 +66,11 @@ run: $(OUTPUT)
 
 # Clean up generated executable and object files
 clean:
-	rm $(OBJECTS) $(OUTPUT) $(OUTPUT).so
+	rm $(OBJECTS) $(OUTPUT) $(SHARED)
+
+# Link libraries and build shared library
+$(SHARED): $(OBJECTS)
+	$(CC) $(LDFLAGS) $(SHARED) $(OBJECTS) $(addprefix -l, $(LIB_C))
 
 # Link libraries and build executables
 $(OUTPUT): $(OBJECTS)
