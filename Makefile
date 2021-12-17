@@ -6,7 +6,7 @@ DEFINES  =
 SANS     = undefined,address,leak
 WARNS    = all pedantic extra
 OPTIMIZE = -O3
-OUTPUT   =
+OUTPUT   = 
 ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
 ARGS     =
 
@@ -30,6 +30,7 @@ LDFLAGS = -o
 # without optimizations and debug flags
 .PHONY: debug
 .PHONY: release
+.PHONY: library
 .PHONY: build
 .PHONY: run
 .PHONY: clean
@@ -46,6 +47,13 @@ release: CFLAGS  := $(OPTIMIZE) $(CFLAGS)
 release: LDFLAGS := $(LDFLAGS)
 release: build
 
+# Build release but for use as a shared library
+library: DEFINES := NDEBUG $(DEFINES)
+library: CFLAGS  := -fPIC $(OPTIMIZE) $(CFLAGS)
+library: LDFLAGS := -shared $(LDFLAGS)
+library: $(OBJECTS)
+	$(CC) $(LDFLAGS) $(OUTPUT).so $(OBJECTS) $(addprefix -l, $(LIB_C))
+
 # Actually build the executable
 # Should not be manually called
 build: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR) $(OUTPUT)
@@ -56,7 +64,7 @@ run: $(OUTPUT)
 
 # Clean up generated executable and object files
 clean:
-	rm $(OBJECTS) $(OUTPUT)
+	rm $(OBJECTS) $(OUTPUT) $(OUTPUT).so
 
 # Link libraries and build executables
 $(OUTPUT): $(OBJECTS)
