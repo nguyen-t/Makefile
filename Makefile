@@ -19,8 +19,8 @@ OBJDIR  = objects
 OBJEXT  = .o
 TSTDIR  = test
 LIBDIR  = lib
-DEPS    = $(basename $(shell ls $(HDRDIR)))
-INPUTS  = $(basename $(shell ls $(SRCDIR)))
+DEPS    = $(basename $(notdir $(wildcard $(HDRDIR)/*$(HDREXT))))
+INPUTS  = $(basename $(notdir $(wildcard $(SRCDIR)/*$(SRCEXT))))
 HEADERS = $(addprefix $(HDRDIR)/, $(addsuffix $(HDREXT), $(DEPS)))
 SOURCES = $(addprefix $(SRCDIR)/, $(addsuffix $(SRCEXT), $(INPUTS)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix $(OBJEXT), $(INPUTS)))
@@ -29,7 +29,7 @@ LDFLAGS = -L$(LIBDIR) -o
 SHARED  = $(addprefix lib, $(addsuffix .so, $(OUTPUT)))
 
 # Calling run without building will build
-# without optimizations and debug flags
+# without optimizations and without debug flags
 .PHONY: debug
 .PHONY: release
 .PHONY: library
@@ -74,7 +74,7 @@ clean:
 
 # Link libraries and build shared library
 $(SHARED): $(OBJECTS)
-	$(CC) $(LDFLAGS) $@ $(OBJECTS) $(addprefix -l, $(LIB_C))
+	$(CC) $(LDFLAGS) $@ $^ $(addprefix -l, $(LIB_C))
 
 # Link libraries and build executables
 $(OUTPUT): $(OBJECTS)
