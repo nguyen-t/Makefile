@@ -6,7 +6,7 @@ DEFINES  =
 SANS     = undefined,address,leak
 WARNS    = all pedantic extra
 OPTIMIZE = -O3
-OUTPUT   =
+OUTPUT   = 
 ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
 ARGS     =
 
@@ -25,7 +25,7 @@ SOURCES = $(addprefix $(SRCDIR)/, $(addsuffix $(SRCEXT), $(INPUTS)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix $(OBJEXT), $(INPUTS)))
 CFLAGS  = $(addprefix -D, $(DEFINES)) -I$(HDRDIR) -c -o
 LDFLAGS = -o
-SHARED  = $(addsuffix .so, $(OUTPUT))
+SHARED  = $(addprefix lib, $(addsuffix .so, $(OUTPUT)))
 
 # Calling run without building will build
 # without optimizations and debug flags
@@ -36,10 +36,13 @@ SHARED  = $(addsuffix .so, $(OUTPUT))
 .PHONY: run
 .PHONY: clean
 
+# Silence command names
+$(VERBOSE).SILENT:
+
 # Build with warnings, sanitizers and DEBUG flags
 debug: DEFINES := DEBUG $(DEFINES)
-debug: CFLAGS  := $(addprefix -W, $(WARNS)) $(CFLAGS)
-debug: LDFLAGS := -fsanitize=$(SANS) $(LDFLAGS)
+debug: CFLAGS  := -g $(addprefix -W, $(WARNS)) $(CFLAGS)
+debug: LDFLAGS := -g -fsanitize=$(SANS) $(LDFLAGS)
 debug: initialize
 debug: $(OUTPUT)
 
@@ -53,7 +56,7 @@ release: $(OUTPUT)
 # Build release but for use as a shared library
 library: DEFINES := NDEBUG $(DEFINES)
 library: CFLAGS  := -fPIC $(OPTIMIZE) $(CFLAGS)
-library: LDFLAGS := -shared $(LDFLAGS)
+library: LDFLAGS := -fPIC -shared $(LDFLAGS)
 library: initialize
 library: $(SHARED)
 
@@ -78,7 +81,7 @@ $(OUTPUT): $(OBJECTS)
 
 # Link header-only libraries and build object files
 $(OBJDIR)/%$(OBJEXT): $(SRCDIR)/%$(SRCEXT)
-	$(CC) $(CFLAGS)  $@ $< $(addprefix -l, $(LIB_H))
+	$(CC) $(CFLAGS) $@ $< $(addprefix -l, $(LIB_H))
 
 # Generate necessary directories
 $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR): % :
