@@ -6,7 +6,7 @@ DEFINES  =
 SANS     = undefined,address,leak
 WARNS    = all pedantic extra
 OPTIMIZE = -O3
-OUTPUT   = 
+OUTPUT   =
 ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
 ARGS     =
 
@@ -18,13 +18,14 @@ SRCEXT  = .c
 OBJDIR  = objects
 OBJEXT  = .o
 TSTDIR  = test
+LIBDIR  = lib
 DEPS    = $(basename $(shell ls $(HDRDIR)))
 INPUTS  = $(basename $(shell ls $(SRCDIR)))
 HEADERS = $(addprefix $(HDRDIR)/, $(addsuffix $(HDREXT), $(DEPS)))
 SOURCES = $(addprefix $(SRCDIR)/, $(addsuffix $(SRCEXT), $(INPUTS)))
 OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix $(OBJEXT), $(INPUTS)))
 CFLAGS  = $(addprefix -D, $(DEFINES)) -I$(HDRDIR) -c -o
-LDFLAGS = -o
+LDFLAGS = -L$(LIBDIR) -o
 SHARED  = $(addprefix lib, $(addsuffix .so, $(OUTPUT)))
 
 # Calling run without building will build
@@ -61,7 +62,7 @@ library: initialize
 library: $(SHARED)
 
 # Sets up project structure
-initialize: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR)
+initialize: | $(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR) $(LIBDIR)
 
 # Run executable with args
 run: $(OUTPUT)
@@ -73,7 +74,7 @@ clean:
 
 # Link libraries and build shared library
 $(SHARED): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(SHARED) $(OBJECTS) $(addprefix -l, $(LIB_C))
+	$(CC) $(LDFLAGS) $@ $(OBJECTS) $(addprefix -l, $(LIB_C))
 
 # Link libraries and build executables
 $(OUTPUT): $(OBJECTS)
@@ -84,5 +85,5 @@ $(OBJDIR)/%$(OBJEXT): $(SRCDIR)/%$(SRCEXT)
 	$(CC) $(CFLAGS) $@ $< $(addprefix -l, $(LIB_H))
 
 # Generate necessary directories
-$(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR): % :
-	mkdir $@
+$(HDRDIR) $(SRCDIR) $(OBJDIR) $(TSTDIR) $(LIBDIR): % :
+	mkdir -p $@
