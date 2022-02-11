@@ -4,7 +4,7 @@ LIB_H    =
 LIB_C    =
 DEFINES  =
 SANS     = undefined,address,leak
-WARNS    = all pedantic extra
+WARNS    = all pedantic extra no-unused-command-line-argument
 OPTIMIZE = -O3
 OUTPUT   =
 ENV      = ASAN_OPTIONS=fast_unwind_on_malloc=0 LSAN_OPTIONS=report_objects=1
